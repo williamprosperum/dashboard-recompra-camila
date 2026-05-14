@@ -117,9 +117,85 @@
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .grid-2 { grid-template-columns: 1fr; }
   }
+
+  /* Password gate */
+  #pw-gate {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #fafafa;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  #pw-gate.unlocked { display: none; }
+  #pw-card {
+    background: #fff; border: 1px solid #e8e8e8; border-radius: 12px;
+    padding: 32px; max-width: 380px; width: 100%;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    text-align: center;
+  }
+  #pw-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  #pw-card p { color: #666; font-size: 14px; margin-bottom: 20px; }
+  #pw-card input {
+    width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 15px; font-family: inherit; margin-bottom: 12px;
+    text-align: center; letter-spacing: 0.1em;
+  }
+  #pw-card input:focus { outline: none; border-color: #c4302b; }
+  #pw-card button {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: #c4302b; color: #fff; font-weight: 600; font-size: 14px;
+    cursor: pointer; font-family: inherit;
+  }
+  #pw-card button:hover { background: #a52823; }
+  #pw-error { color: #c4302b; font-size: 13px; margin-top: 12px; display: none; }
+  body.locked { overflow: hidden; }
+  body.locked > div.container { filter: blur(6px); pointer-events: none; user-select: none; }
+
 </style>
 </head>
 <body>
+
+<div id="pw-gate">
+  <div id="pw-card">
+    <h2>Acesso restrito</h2>
+    <p>Digite a senha para ver o dashboard.</p>
+    <input id="pw-input" type="password" placeholder="Senha" autofocus>
+    <button id="pw-submit">Entrar</button>
+    <div id="pw-error">Senha incorreta. Tente novamente.</div>
+  </div>
+</div>
+<script>
+(function() {
+  const PW = "100521";
+  const gate = document.getElementById('pw-gate');
+  const input = document.getElementById('pw-input');
+  const btn = document.getElementById('pw-submit');
+  const err = document.getElementById('pw-error');
+  document.body.classList.add('locked');
+
+  function tryUnlock() {
+    if (input.value === PW) {
+      gate.classList.add('unlocked');
+      document.body.classList.remove('locked');
+      try { sessionStorage.setItem('dash_unlocked', '1'); } catch(e) {}
+    } else {
+      err.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+  btn.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+  // Remember unlock for the session
+  try {
+    if (sessionStorage.getItem('dash_unlocked') === '1') {
+      gate.classList.add('unlocked');
+      document.body.classList.remove('locked');
+    }
+  } catch(e) {}
+})();
+</script>
+
 <div class="container">
   <h1>Análise de Recompra · Base Camila Renaux</h1>
   <div class="subtitle" id="subtitle">Carregando…</div>
