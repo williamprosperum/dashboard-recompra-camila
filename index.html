@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Análise de Recompra · Camila Renaux</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #fafafa;
+    color: #111;
+    padding: 32px;
+    line-height: 1.5;
+  }
+  .container { max-width: 1280px; margin: 0 auto; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.02em; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 32px; }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .kpi {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .kpi-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .kpi-value { font-size: 32px; font-weight: 700; color: #111; letter-spacing: -0.02em; }
+  .kpi-sub { font-size: 12px; color: #666; margin-top: 4px; }
+  .kpi-accent { color: #c4302b; }
+  .kpi-good { color: #1b8a4f; }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.01em; }
+  .card .hint { font-size: 13px; color: #666; margin-bottom: 20px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .grid-2 .card { margin-bottom: 0; }
+
+  /* Bar chart */
+  .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 14px; }
+  .bar-label { width: 130px; flex-shrink: 0; color: #333; font-weight: 500; }
+  .bar-track { flex: 1; background: #f0f0f0; border-radius: 4px; height: 28px; position: relative; overflow: hidden; }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #c4302b, #e85850);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 50px;
+    transition: width 0.6s ease;
+  }
+  .bar-value { width: 100px; flex-shrink: 0; text-align: right; font-variant-numeric: tabular-nums; color: #666; font-size: 13px; }
+
+  /* Cross-sell explorer */
+  .selector { margin-bottom: 16px; }
+  .selector label { display: block; font-size: 12px; color: #666; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .cross-info {
+    background: #fef6f5;
+    border-left: 3px solid #c4302b;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .cross-info strong { color: #c4302b; }
+
+  /* Cross-sell table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; background: #f8f8f8; font-weight: 600; color: #555; border-bottom: 1px solid #e8e8e8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .pct-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+  .pct-bar { width: 60px; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+  .pct-bar-fill { height: 100%; background: #c4302b; border-radius: 3px; }
+  .product-name { font-weight: 500; color: #222; }
+
+  /* Heatmap */
+  .heatmap-wrapper { overflow-x: auto; }
+  .heatmap { border-collapse: collapse; font-size: 11px; }
+  .heatmap th, .heatmap td { border: 1px solid #f0f0f0; padding: 6px 8px; text-align: center; font-variant-numeric: tabular-nums; }
+  .heatmap th { background: #f8f8f8; font-weight: 600; }
+  .heatmap th.row-label { text-align: left; padding-right: 12px; max-width: 220px; white-space: normal; line-height: 1.2; }
+  .heatmap td.row-label { text-align: left; background: #f8f8f8; font-weight: 600; padding-right: 12px; max-width: 220px; white-space: normal; line-height: 1.2; }
+  .heatmap td.diag { background: #eee; color: #999; }
+
+  .footnote { font-size: 11px; color: #999; margin-top: 24px; text-align: center; }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Análise de Recompra · Base Camila Renaux</h1>
+  <div class="subtitle" id="subtitle">Carregando…</div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Clientes únicos</div>
+      <div class="kpi-value" id="kpi-customers">—</div>
+      <div class="kpi-sub">identificados por e-mail</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Total de transações</div>
+      <div class="kpi-value" id="kpi-transactions">—</div>
+      <div class="kpi-sub">apenas cobranças=1</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Taxa de recompra</div>
+      <div class="kpi-value kpi-accent" id="kpi-rate">—</div>
+      <div class="kpi-sub" id="kpi-rate-sub">clientes com 2+ produtos distintos</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Compradores únicos (1 produto)</div>
+      <div class="kpi-value" id="kpi-single">—</div>
+      <div class="kpi-sub" id="kpi-single-sub">— do total</div>
+    </div>
+  </div>
+
+  <!-- Distribuição + Resumo -->
+  <div class="grid-2">
+    <div class="card">
+      <h2>Distribuição: produtos distintos por cliente</h2>
+      <div class="hint">Quantos clientes compraram exatamente N produtos diferentes ao longo de toda a base.</div>
+      <div id="distribution-bars"></div>
+    </div>
+    <div class="card">
+      <h2>Leitura rápida</h2>
+      <div class="hint">O que os números estão dizendo</div>
+      <div id="reading"></div>
+    </div>
+  </div>
+
+  <!-- Cross-sell explorer -->
+  <div class="card">
+    <h2>Explorador de cross-purchase</h2>
+    <div class="hint">Selecione um produto e veja para quais outros produtos a base desse produto migra. Útil para campanhas de remarketing e venda cruzada.</div>
+
+    <div class="selector">
+      <label>Produto de origem</label>
+      <select id="product-select"></select>
+    </div>
+
+    <div class="cross-info" id="cross-info"></div>
+
+    <table id="cross-table">
+      <thead>
+        <tr>
+          <th>Produto comprado depois</th>
+          <th style="text-align:right">Clientes em comum</th>
+          <th style="text-align:right; width: 220px">% da base origem</th>
+        </tr>
+      </thead>
+      <tbody id="cross-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Heatmap completo -->
+  <div class="card">
+    <h2>Matriz completa de cross-purchase</h2>
+    <div class="hint">Linhas = produto comprado. Colunas = outros produtos comprados pela mesma base. Valor = % da base da linha que também comprou a coluna. Quanto mais escuro, maior a sobreposição.</div>
+    <div class="heatmap-wrapper">
+      <table class="heatmap" id="heatmap"></table>
+    </div>
+  </div>
+
+  <div class="footnote">Dados Hotmart · cliente identificado por e-mail normalizado · apenas pedidos com cobrança única (cobranças=1) · status Completo + Aprovado</div>
+</div>
+
+<script>
+const DATA = {"total_customers": 5791, "total_transactions": 6975, "distribution": {"1": 4907, "2": 709, "3": 133, "4": 31, "5": 5, "6": 1, "7": 5}, "repurchase_rate_pct": 15.27, "matrix": {"Formação Estrategistas de Marketing": {"total_buyers": 256, "crosses": {"Imersão Consultoria de Marketing na Prática": 1, "Imersão Consultoria de Marketing na Prática - 2ª edição": 19, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 37, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 20, "Precificação de Serviços de Marketing com Inteligência Artificial": 2, "Programa de Acompanhamento Avançado | Camila Renaux": 4, "Vendas de Alto Valor no Marketing": 7, "Workshop Estrategistas de Marketing - 1ª Edição": 64, "Workshop Estrategistas de Marketing - 2ª edição": 57, "Workshop Estrategistas de Marketing - 3ª edição": 26, "Workshop Estrategistas de Marketing - 5ª Edição": 10, "Workshop Planejamento de Marketing": 34}}, "Imersão Consultoria de Marketing na Prática": {"total_buyers": 558, "crosses": {"Formação Estrategistas de Marketing": 1, "Imersão Consultoria de Marketing na Prática - 2ª edição": 20, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 19, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 6, "Precificação de Serviços de Marketing com Inteligência Artificial": 0, "Programa de Acompanhamento Avançado | Camila Renaux": 0, "Vendas de Alto Valor no Marketing": 34, "Workshop Estrategistas de Marketing - 1ª Edição": 15, "Workshop Estrategistas de Marketing - 2ª edição": 8, "Workshop Estrategistas de Marketing - 3ª edição": 5, "Workshop Estrategistas de Marketing - 5ª Edição": 8, "Workshop Planejamento de Marketing": 8}}, "Imersão Consultoria de Marketing na Prática - 2ª edição": {"total_buyers": 855, "crosses": {"Formação Estrategistas de Marketing": 19, "Imersão Consultoria de Marketing na Prática": 20, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 25, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 6, "Precificação de Serviços de Marketing com Inteligência Artificial": 0, "Programa de Acompanhamento Avançado | Camila Renaux": 0, "Vendas de Alto Valor no Marketing": 53, "Workshop Estrategistas de Marketing - 1ª Edição": 16, "Workshop Estrategistas de Marketing - 2ª edição": 19, "Workshop Estrategistas de Marketing - 3ª edição": 6, "Workshop Estrategistas de Marketing - 5ª Edição": 13, "Workshop Planejamento de Marketing": 11}}, "Imersão de Consultoria de Marketing na Prática - 1ª edição": {"total_buyers": 1088, "crosses": {"Formação Estrategistas de Marketing": 37, "Imersão Consultoria de Marketing na Prática": 19, "Imersão Consultoria de Marketing na Prática - 2ª edição": 25, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 6, "Precificação de Serviços de Marketing com Inteligência Artificial": 0, "Programa de Acompanhamento Avançado | Camila Renaux": 1, "Vendas de Alto Valor no Marketing": 86, "Workshop Estrategistas de Marketing - 1ª Edição": 38, "Workshop Estrategistas de Marketing - 2ª edição": 36, "Workshop Estrategistas de Marketing - 3ª edição": 5, "Workshop Estrategistas de Marketing - 5ª Edição": 17, "Workshop Planejamento de Marketing": 30}}, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": {"total_buyers": 239, "crosses": {"Formação Estrategistas de Marketing": 20, "Imersão Consultoria de Marketing na Prática": 6, "Imersão Consultoria de Marketing na Prática - 2ª edição": 6, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 6, "Precificação de Serviços de Marketing com Inteligência Artificial": 7, "Programa de Acompanhamento Avançado | Camila Renaux": 1, "Vendas de Alto Valor no Marketing": 14, "Workshop Estrategistas de Marketing - 1ª Edição": 50, "Workshop Estrategistas de Marketing - 2ª edição": 84, "Workshop Estrategistas de Marketing - 3ª edição": 40, "Workshop Estrategistas de Marketing - 5ª Edição": 33, "Workshop Planejamento de Marketing": 84}}, "Precificação de Serviços de Marketing com Inteligência Artificial": {"total_buyers": 13, "crosses": {"Formação Estrategistas de Marketing": 2, "Imersão Consultoria de Marketing na Prática": 0, "Imersão Consultoria de Marketing na Prática - 2ª edição": 0, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 0, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 7, "Programa de Acompanhamento Avançado | Camila Renaux": 0, "Vendas de Alto Valor no Marketing": 1, "Workshop Estrategistas de Marketing - 1ª Edição": 11, "Workshop Estrategistas de Marketing - 2ª edição": 1, "Workshop Estrategistas de Marketing - 3ª edição": 0, "Workshop Estrategistas de Marketing - 5ª Edição": 0, "Workshop Planejamento de Marketing": 1}}, "Programa de Acompanhamento Avançado | Camila Renaux": {"total_buyers": 7, "crosses": {"Formação Estrategistas de Marketing": 4, "Imersão Consultoria de Marketing na Prática": 0, "Imersão Consultoria de Marketing na Prática - 2ª edição": 0, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 1, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 1, "Precificação de Serviços de Marketing com Inteligência Artificial": 0, "Vendas de Alto Valor no Marketing": 0, "Workshop Estrategistas de Marketing - 1ª Edição": 0, "Workshop Estrategistas de Marketing - 2ª edição": 2, "Workshop Estrategistas de Marketing - 3ª edição": 2, "Workshop Estrategistas de Marketing - 5ª Edição": 2, "Workshop Planejamento de Marketing": 1}}, "Vendas de Alto Valor no Marketing": {"total_buyers": 290, "crosses": {"Formação Estrategistas de Marketing": 7, "Imersão Consultoria de Marketing na Prática": 34, "Imersão Consultoria de Marketing na Prática - 2ª edição": 53, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 86, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 14, "Precificação de Serviços de Marketing com Inteligência Artificial": 1, "Programa de Acompanhamento Avançado | Camila Renaux": 0, "Workshop Estrategistas de Marketing - 1ª Edição": 21, "Workshop Estrategistas de Marketing - 2ª edição": 22, "Workshop Estrategistas de Marketing - 3ª edição": 7, "Workshop Estrategistas de Marketing - 5ª Edição": 23, "Workshop Planejamento de Marketing": 21}}, "Workshop Estrategistas de Marketing - 1ª Edição": {"total_buyers": 1165, "crosses": {"Formação Estrategistas de Marketing": 64, "Imersão Consultoria de Marketing na Prática": 15, "Imersão Consultoria de Marketing na Prática - 2ª edição": 16, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 38, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 50, "Precificação de Serviços de Marketing com Inteligência Artificial": 11, "Programa de Acompanhamento Avançado | Camila Renaux": 0, "Vendas de Alto Valor no Marketing": 21, "Workshop Estrategistas de Marketing - 2ª edição": 79, "Workshop Estrategistas de Marketing - 3ª edição": 7, "Workshop Estrategistas de Marketing - 5ª Edição": 12, "Workshop Planejamento de Marketing": 33}}, "Workshop Estrategistas de Marketing - 2ª edição": {"total_buyers": 934, "crosses": {"Formação Estrategistas de Marketing": 57, "Imersão Consultoria de Marketing na Prática": 8, "Imersão Consultoria de Marketing na Prática - 2ª edição": 19, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 36, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 84, "Precificação de Serviços de Marketing com Inteligência Artificial": 1, "Programa de Acompanhamento Avançado | Camila Renaux": 2, "Vendas de Alto Valor no Marketing": 22, "Workshop Estrategistas de Marketing - 1ª Edição": 79, "Workshop Estrategistas de Marketing - 3ª edição": 7, "Workshop Estrategistas de Marketing - 5ª Edição": 15, "Workshop Planejamento de Marketing": 55}}, "Workshop Estrategistas de Marketing - 3ª edição": {"total_buyers": 287, "crosses": {"Formação Estrategistas de Marketing": 26, "Imersão Consultoria de Marketing na Prática": 5, "Imersão Consultoria de Marketing na Prática - 2ª edição": 6, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 5, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 40, "Precificação de Serviços de Marketing com Inteligência Artificial": 0, "Programa de Acompanhamento Avançado | Camila Renaux": 2, "Vendas de Alto Valor no Marketing": 7, "Workshop Estrategistas de Marketing - 1ª Edição": 7, "Workshop Estrategistas de Marketing - 2ª edição": 7, "Workshop Estrategistas de Marketing - 5ª Edição": 5, "Workshop Planejamento de Marketing": 35}}, "Workshop Estrategistas de Marketing - 5ª Edição": {"total_buyers": 369, "crosses": {"Formação Estrategistas de Marketing": 10, "Imersão Consultoria de Marketing na Prática": 8, "Imersão Consultoria de Marketing na Prática - 2ª edição": 13, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 17, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 33, "Precificação de Serviços de Marketing com Inteligência Artificial": 0, "Programa de Acompanhamento Avançado | Camila Renaux": 2, "Vendas de Alto Valor no Marketing": 23, "Workshop Estrategistas de Marketing - 1ª Edição": 12, "Workshop Estrategistas de Marketing - 2ª edição": 15, "Workshop Estrategistas de Marketing - 3ª edição": 5, "Workshop Planejamento de Marketing": 16}}, "Workshop Planejamento de Marketing": {"total_buyers": 853, "crosses": {"Formação Estrategistas de Marketing": 34, "Imersão Consultoria de Marketing na Prática": 8, "Imersão Consultoria de Marketing na Prática - 2ª edição": 11, "Imersão de Consultoria de Marketing na Prática - 1ª edição": 30, "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing": 84, "Precificação de Serviços de Marketing com Inteligência Artificial": 1, "Programa de Acompanhamento Avançado | Camila Renaux": 1, "Vendas de Alto Valor no Marketing": 21, "Workshop Estrategistas de Marketing - 1ª Edição": 33, "Workshop Estrategistas de Marketing - 2ª edição": 55, "Workshop Estrategistas de Marketing - 3ª edição": 35, "Workshop Estrategistas de Marketing - 5ª Edição": 16}}}, "products": ["Formação Estrategistas de Marketing", "Imersão Consultoria de Marketing na Prática", "Imersão Consultoria de Marketing na Prática - 2ª edição", "Imersão de Consultoria de Marketing na Prática - 1ª edição", "Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing", "Precificação de Serviços de Marketing com Inteligência Artificial", "Programa de Acompanhamento Avançado | Camila Renaux", "Vendas de Alto Valor no Marketing", "Workshop Estrategistas de Marketing - 1ª Edição", "Workshop Estrategistas de Marketing - 2ª edição", "Workshop Estrategistas de Marketing - 3ª edição", "Workshop Estrategistas de Marketing - 5ª Edição", "Workshop Planejamento de Marketing"], "date_range": {"start": "2025-01-14 12:18:15", "end": "2026-05-13 10:23:19"}};
+
+// ===== KPIs =====
+document.getElementById('subtitle').textContent =
+  'Período: ' + DATA.date_range.start.substring(0,10) + ' até ' + DATA.date_range.end.substring(0,10) +
+  ' · ' + DATA.products.length + ' produtos analisados';
+
+document.getElementById('kpi-customers').textContent = DATA.total_customers.toLocaleString('pt-BR');
+document.getElementById('kpi-transactions').textContent = DATA.total_transactions.toLocaleString('pt-BR');
+document.getElementById('kpi-rate').textContent = DATA.repurchase_rate_pct.toFixed(2).replace('.', ',') + '%';
+
+const singleBuyers = DATA.distribution['1'] || 0;
+const singlePct = 100 * singleBuyers / DATA.total_customers;
+document.getElementById('kpi-single').textContent = singleBuyers.toLocaleString('pt-BR');
+document.getElementById('kpi-single-sub').textContent = singlePct.toFixed(2).replace('.', ',') + '% da base';
+
+const recomp = DATA.total_customers - singleBuyers;
+document.getElementById('kpi-rate-sub').textContent = recomp.toLocaleString('pt-BR') + ' clientes recompraram';
+
+// ===== Distribuição (barras) =====
+const distContainer = document.getElementById('distribution-bars');
+const maxDist = Math.max(...Object.values(DATA.distribution));
+const sortedDistKeys = Object.keys(DATA.distribution).map(Number).sort((a,b) => a-b);
+for (const k of sortedDistKeys) {
+  const v = DATA.distribution[String(k)];
+  const pct = 100 * v / DATA.total_customers;
+  const width = 100 * v / maxDist;
+  const row = document.createElement('div');
+  row.className = 'bar-row';
+  row.innerHTML = `
+    <div class="bar-label">${k} produto${k > 1 ? 's' : ''}</div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width: ${width}%">${v.toLocaleString('pt-BR')}</div>
+    </div>
+    <div class="bar-value">${pct.toFixed(2).replace('.', ',')}%</div>
+  `;
+  distContainer.appendChild(row);
+}
+
+// ===== Leitura rápida =====
+const reading = document.getElementById('reading');
+const buyers2plus = DATA.total_customers - singleBuyers;
+const buyers3plus = sortedDistKeys.filter(k => k >= 3).reduce((s, k) => s + DATA.distribution[String(k)], 0);
+const buyers4plus = sortedDistKeys.filter(k => k >= 4).reduce((s, k) => s + DATA.distribution[String(k)], 0);
+
+// Top products with highest cross-purchase rate
+const crossRates = DATA.products.map(p => {
+  const total = DATA.matrix[p].total_buyers;
+  const crosses = Object.values(DATA.matrix[p].crosses).reduce((s, x) => s + x, 0);
+  // unique cross buyers (not sum - need to compute differently, but as proxy use sum bounded)
+  // For "leitura rápida" we'll use a different metric: use the original computed rate
+  return { p, total, cross_sum: crosses };
+});
+
+reading.innerHTML = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;line-height:1.6">
+    <div style="background:#fef6f5;padding:14px;border-radius:8px;border-left:3px solid #c4302b">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Recompra real</div>
+      <div style="font-size:22px;font-weight:700;color:#c4302b">${buyers2plus.toLocaleString('pt-BR')}</div>
+      <div style="color:#666">clientes compraram 2+ produtos</div>
+    </div>
+    <div style="background:#f5fbf7;padding:14px;border-radius:8px;border-left:3px solid #1b8a4f">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Super-fãs</div>
+      <div style="font-size:22px;font-weight:700;color:#1b8a4f">${buyers3plus.toLocaleString('pt-BR')}</div>
+      <div style="color:#666">clientes compraram 3+ produtos</div>
+    </div>
+    <div style="background:#fdf6e3;padding:14px;border-radius:8px;border-left:3px solid #b8860b;grid-column:span 2">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Diagnóstico</div>
+      <div style="color:#333;margin-top:4px">
+        <strong>${singlePct.toFixed(1).replace('.', ',')}% da base ainda comprou só uma vez.</strong>
+        Existe espaço grande para esteira de recompra. Os ${buyers4plus} clientes que compraram 4+ produtos são sua amostra mais fiel — vale entrevistar para mapear o que faz alguém repetir.
+      </div>
+    </div>
+  </div>
+`;
+
+// ===== Cross-sell explorer =====
+const select = document.getElementById('product-select');
+DATA.products.forEach(p => {
+  const opt = document.createElement('option');
+  opt.value = p;
+  opt.textContent = p + ' (' + DATA.matrix[p].total_buyers + ' compradores)';
+  select.appendChild(opt);
+});
+
+function renderCross(productName) {
+  const m = DATA.matrix[productName];
+  const total = m.total_buyers;
+  const crosses = Object.entries(m.crosses)
+    .map(([k, v]) => ({ p: k, count: v, pct: 100 * v / total }))
+    .sort((a, b) => b.count - a.count);
+
+  const totalCrossBuyers = crosses.reduce((s, c) => s + c.count, 0);
+
+  document.getElementById('cross-info').innerHTML =
+    `<strong>${total.toLocaleString('pt-BR')}</strong> clientes compraram <strong>"${productName}"</strong>. ` +
+    `A tabela abaixo mostra quantos desses clientes <strong>também</strong> compraram cada outro produto da esteira.`;
+
+  const tbody = document.getElementById('cross-tbody');
+  tbody.innerHTML = '';
+  const maxPct = Math.max(...crosses.map(c => c.pct), 1);
+  for (const c of crosses) {
+    const tr = document.createElement('tr');
+    const barWidth = 100 * c.pct / maxPct;
+    tr.innerHTML = `
+      <td class="product-name">${c.p}</td>
+      <td class="num">${c.count.toLocaleString('pt-BR')}</td>
+      <td class="num">
+        <div class="pct-cell">
+          <div class="pct-bar"><div class="pct-bar-fill" style="width:${barWidth}%"></div></div>
+          <span style="min-width:50px">${c.pct.toFixed(1).replace('.', ',')}%</span>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+select.addEventListener('change', e => renderCross(e.target.value));
+renderCross(DATA.products[0]);
+
+// ===== Heatmap =====
+const heatmap = document.getElementById('heatmap');
+const products = DATA.products;
+
+// Build short labels (last meaningful segment)
+function shortLabel(p) {
+  if (p.length < 30) return p;
+  // Truncate intelligently
+  return p.replace('Workshop Estrategistas de Marketing', 'WS Estrategistas')
+          .replace('Imersão de Consultoria de Marketing na Prática', 'Imersão Consult MKT')
+          .replace('Imersão Consultoria de Marketing na Prática', 'Imersão Consult MKT')
+          .replace('Workshop Planejamento de Marketing', 'WS Planejamento')
+          .replace('Formação Estrategistas de Marketing', 'Formação Estrategistas')
+          .replace('Vendas de Alto Valor no Marketing', 'Vendas Alto Valor')
+          .replace('Modelo editável de proposta comercial + Minicurso sobre venda de serviços de Marketing', 'Modelo Proposta + Minicurso')
+          .replace('Precificação de Serviços de Marketing com Inteligência Artificial', 'Precificação c/ IA')
+          .replace('Programa de Acompanhamento Avançado | Camila Renaux', 'Acompanhamento Avançado');
+}
+
+let html = '<thead><tr><th class="row-label">De \\ Para</th>';
+for (const p of products) html += `<th title="${p}">${shortLabel(p)}</th>`;
+html += '</tr></thead><tbody>';
+
+for (const a of products) {
+  const totalA = DATA.matrix[a].total_buyers;
+  html += `<tr><td class="row-label" title="${a}">${shortLabel(a)} <span style="color:#999;font-weight:400">(${totalA})</span></td>`;
+  for (const b of products) {
+    if (a === b) {
+      html += '<td class="diag">—</td>';
+    } else {
+      const n = DATA.matrix[a].crosses[b] || 0;
+      const pct = 100 * n / totalA;
+      // Color intensity 0-50%
+      const intensity = Math.min(pct / 30, 1);
+      const r = 254 - Math.floor((254 - 196) * intensity);
+      const g = 246 - Math.floor((246 - 48) * intensity);
+      const bl = 245 - Math.floor((245 - 43) * intensity);
+      const textColor = intensity > 0.5 ? '#fff' : '#222';
+      const display = pct >= 0.5 ? pct.toFixed(1).replace('.', ',') + '%' : (n > 0 ? '<' + (1).toFixed(0) + '%' : '—');
+      html += `<td style="background:rgb(${r},${g},${bl});color:${textColor}" title="${n} clientes (${pct.toFixed(2)}%)">${display}</td>`;
+    }
+  }
+  html += '</tr>';
+}
+html += '</tbody>';
+heatmap.innerHTML = html;
+</script>
+</body>
+</html>
